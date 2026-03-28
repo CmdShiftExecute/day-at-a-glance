@@ -14,6 +14,12 @@
 
 <br/>
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/github/CmdShiftExecute/day-at-a-glance?referralCode=)
+
+**One click. Your own daily command center in under 2 minutes.**
+
+<br/>
+
 > **Your data never leaves your machine.** No cloud accounts. No third-party storage. Fully self-hosted.
 
 </div>
