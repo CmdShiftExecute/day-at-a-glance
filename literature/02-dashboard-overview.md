@@ -32,6 +32,22 @@ Every page load begins with a cinematic splash sequence:
 
 ---
 
+## 📸 At a Glance
+
+<details open>
+<summary><b>🌙 Dark Mode</b></summary>
+<br/>
+<img src="../screenshots/dashboard-full-dark-mode.png" alt="Dashboard Dark Mode" width="100%" />
+</details>
+
+<details>
+<summary><b>☀️ Light Mode</b></summary>
+<br/>
+<img src="../screenshots/dashboard-full-light-mode.png" alt="Dashboard Light Mode" width="100%" />
+</details>
+
+---
+
 ## 🏗️ Layout Anatomy
 
 The dashboard is composed of distinct zones stacked vertically:

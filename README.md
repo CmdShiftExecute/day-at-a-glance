@@ -24,6 +24,76 @@ A self-hosted daily dashboard that brings your schedule, tasks, meetings, emails
 
 ---
 
+## 📸 Screenshots
+
+<details open>
+<summary><b>🌙 Full Dashboard — Dark Mode</b></summary>
+<br/>
+<img src="screenshots/dashboard-full-dark-mode.png" alt="Dashboard Dark Mode" width="100%" />
+</details>
+
+<details>
+<summary><b>☀️ Full Dashboard — Light Mode</b></summary>
+<br/>
+<img src="screenshots/dashboard-full-light-mode.png" alt="Dashboard Light Mode" width="100%" />
+</details>
+
+<details>
+<summary><b>📊 Header & Stats Bar</b></summary>
+<br/>
+<img src="screenshots/header-stats-bar-dark-mode.png" alt="Header and Stats Bar" width="100%" />
+</details>
+
+<details>
+<summary><b>✅ Tasks Panel</b></summary>
+<br/>
+<img src="screenshots/tasks-panel-dark-mode.png" alt="Tasks Panel" width="100%" />
+</details>
+
+<details>
+<summary><b>📧 Inbox Panel</b></summary>
+<br/>
+<img src="screenshots/inbox-panel-dark-mode.png" alt="Inbox Panel" width="100%" />
+</details>
+
+<details>
+<summary><b>🤝 Commitments & Sent Emails</b></summary>
+<br/>
+<img src="screenshots/commitments-and-sent-emails-dark-mode.png" alt="Commitments and Sent Emails" width="100%" />
+</details>
+
+<details>
+<summary><b>⚙️ Settings Modal</b></summary>
+<br/>
+<img src="screenshots/settings-modal-dark-mode.png" alt="Settings Modal" width="100%" />
+</details>
+
+<details>
+<summary><b>📅 Add Schedule Item</b></summary>
+<br/>
+<img src="screenshots/add-schedule-modal-dark-mode.png" alt="Add Schedule Modal" width="100%" />
+</details>
+
+<details>
+<summary><b>✅ Add Task</b></summary>
+<br/>
+<img src="screenshots/add-task-modal-dark-mode.png" alt="Add Task Modal" width="100%" />
+</details>
+
+<details>
+<summary><b>🤝 Add Commitment</b></summary>
+<br/>
+<img src="screenshots/add-commitment-modal-dark-mode.png" alt="Add Commitment Modal" width="100%" />
+</details>
+
+<details>
+<summary><b>❓ User Guide</b></summary>
+<br/>
+<img src="screenshots/user-guide-modal.png" alt="User Guide Modal" width="100%" />
+</details>
+
+---
+
 ## Features
 
 <table>
