@@ -28,9 +28,25 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# user data (Excel, settings, photos)
+/data/
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# development tooling
+.claude/
+
+# unused source/intermediate logo files
+/public/logo-square.png
+/public/logo-wide.png
+/public/logo-transparent.png
+/public/logo-cropped.png
+/public/favicon.svg
+
+# profile photo (contains user photo, not for public repo)
+/public/profile.png

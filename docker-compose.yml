@@ -1,0 +1,9 @@
+services:
+  day-at-a-glance:
+    image: day-at-a-glance:latest
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
