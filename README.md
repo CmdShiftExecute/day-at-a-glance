@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="public/logo-header.png" alt="Day at a Glance" width="100" />
-
-# Day at a Glance
+<img src="public/social-preview.png" alt="Day at a Glance" width="100%" />
 
 **Your personal daily command center — unified, self-hosted, and private.**
 
