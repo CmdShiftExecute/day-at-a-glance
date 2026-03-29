@@ -1,17 +1,19 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, AlertTriangle, XCircle } from 'lucide-react';
 
 interface DataFreshnessProps {
   lastLoaded: Date | null;
   isUsingDemo: boolean;
+  loadError?: string | null;
 }
 
-export function DataFreshness({ lastLoaded, isUsingDemo }: DataFreshnessProps) {
-  const { text, isStale } = useMemo(() => {
-    if (isUsingDemo) return { text: 'Using demo data', isStale: false };
-    if (!lastLoaded) return { text: '', isStale: false };
+export function DataFreshness({ lastLoaded, isUsingDemo, loadError }: DataFreshnessProps) {
+  const { text, isStale, isError } = useMemo(() => {
+    if (loadError) return { text: `Load failed: ${loadError}`, isStale: false, isError: true };
+    if (isUsingDemo) return { text: 'Using demo data', isStale: false, isError: false };
+    if (!lastLoaded) return { text: '', isStale: false, isError: false };
 
     const now = new Date();
     const diffMs = now.getTime() - lastLoaded.getTime();
@@ -29,15 +31,19 @@ export function DataFreshness({ lastLoaded, isUsingDemo }: DataFreshnessProps) {
     return {
       text: stale ? `Data is ${timeStr}` : `Loaded ${timeStr}`,
       isStale: stale,
+      isError: false,
     };
-  }, [lastLoaded, isUsingDemo]);
+  }, [lastLoaded, isUsingDemo, loadError]);
 
   if (!text) return null;
 
+  const color = isError ? 'var(--accent-red, #ef4444)' : isStale ? 'var(--accent-amber)' : 'var(--text-muted)';
+  const Icon = isError ? XCircle : isStale ? AlertTriangle : Clock;
+
   return (
-    <div className="flex items-center gap-1 text-[10px] md:text-xs" style={{ color: isStale ? 'var(--accent-amber)' : 'var(--text-muted)' }}>
-      {isStale ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-      <span>{text}</span>
+    <div className="flex items-center gap-1 text-[10px] md:text-xs max-w-[200px]" style={{ color }}>
+      <Icon className="w-3 h-3 flex-shrink-0" />
+      <span className="truncate">{text}</span>
     </div>
   );
 }

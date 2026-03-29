@@ -44,10 +44,9 @@ function normalizeTaskType(raw: string): 'action' | 'deadline' | 'followup' | 'p
 /** Normalize priority: scheduler may send 'normal' which isn't in our enum */
 function normalizePriority(raw: string): 'high' | 'medium' | 'low' {
   const v = raw.toLowerCase().trim();
-  if (v === 'high') return 'high';
-  if (v === 'medium') return 'medium';
-  if (v === 'low') return 'low';
-  if (v === 'normal') return 'medium'; // common scheduler output
+  if (v === 'high' || v === 'urgent' || v === 'critical' || v === 'evp' || v === 'vp') return 'high';
+  if (v === 'medium' || v === 'normal' || v === 'moderate') return 'medium';
+  if (v === 'low' || v === 'minor' || v === 'fyi' || v === 'info') return 'low';
   return 'medium';
 }
 
@@ -113,54 +112,109 @@ function normalizeTime(raw: unknown): string | null {
 }
 
 /** Warn if a date string doesn't match YYYY-MM-DD format */
-function warnBadDate(dateStr: string, sheet: string, row: number, col: string, warnings: string[]): void {
+function warnBadDate(dateStr: string, sheet: string, row: number, colName: string, warnings: string[]): void {
   if (!dateStr || dateStr === todayStr()) return;
   if (/^\d{4}-\d{1,2}-\d{1,2}/.test(dateStr)) return; // looks like YYYY-MM-DD — good
-  warnings.push(`${sheet} row ${row + 1}: "${col}" value "${dateStr}" is not in YYYY-MM-DD format. Dates like DD/MM or MM/DD are ambiguous.`);
+  warnings.push(`${sheet} row ${row + 1}: "${colName}" value "${dateStr}" is not in YYYY-MM-DD format. Dates like DD/MM or MM/DD are ambiguous.`);
 }
 
+// ---------------------------------------------------------------------------
+// Case-insensitive, alias-aware column resolver
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize row keys to lowercase for case-insensitive matching.
+ * Called once per row, returns a new object with all keys lowercased.
+ */
+function lowerKeys(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(row)) {
+    out[key.toLowerCase().trim()] = row[key];
+  }
+  return out;
+}
+
+/**
+ * Resolve a column value by trying a list of lowercase aliases in order.
+ * The row passed in MUST already have lowercased keys (via lowerKeys()).
+ *
+ * Example: col(row, 'title', 'subject', 'taskname', 'name', 'event', 'eventtitle')
+ * will try row.title, row.subject, row.taskname, row.name, etc.
+ */
+function col(row: Record<string, unknown>, ...keys: string[]): unknown {
+  for (const k of keys) {
+    const v = row[k];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Sheet finder — case-insensitive + common aliases
+// ---------------------------------------------------------------------------
+function findSheet(wb: XLSX.WorkBook, ...names: string[]): XLSX.WorkSheet | null {
+  // Build a lowercase → actual name map
+  const lcMap: Record<string, string> = {};
+  for (const sn of wb.SheetNames) {
+    lcMap[sn.toLowerCase().trim()] = sn;
+  }
+  for (const name of names) {
+    const actual = lcMap[name.toLowerCase().trim()];
+    if (actual && wb.Sheets[actual]) return wb.Sheets[actual];
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Main row parser
+// ---------------------------------------------------------------------------
 function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: string[]; rowsParsed: number; warnings: string[] } {
   const errors: string[] = [];
   const warnings: string[] = [];
   let rowsParsed = 0;
 
-  // Schedule sheet
-  const scheduleSheet = wb.Sheets['Schedule'] || wb.Sheets['schedule'];
+  // ── Schedule sheet ──────────────────────────────────────────────────
+  const scheduleSheet = findSheet(wb, 'Schedule');
   if (scheduleSheet) {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(scheduleSheet, { raw: false });
-    rows.forEach((row, i) => {
-      const date = String(row.date || '') || todayStr();
+    rows.forEach((rawRow, i) => {
+      const row = lowerKeys(rawRow);
+      const date = String(col(row, 'date') || '') || todayStr();
       warnBadDate(date, 'Schedule', i, 'date', warnings);
       ensureDay(data, date);
-      const time = normalizeTime(row.time);
-      if (time && row.title) {
-        const endTime = normalizeTime(row.endTime) || time;
+      const time = normalizeTime(col(row, 'time', 'starttime', 'start_time', 'start'));
+      const title = col(row, 'title', 'subject', 'event', 'eventtitle', 'event_title', 'eventname', 'name');
+      if (time && title) {
+        const endTime = normalizeTime(col(row, 'endtime', 'end_time', 'end')) || time;
         data[date].schedule.push({
           id: genId('s', i),
           time,
           endTime,
-          title: String(row.title),
-          type: (String(row.type || 'task') as ScheduleItem['type']),
-          description: row.description ? String(row.description) : undefined,
-          link: row.link ? String(row.link) : undefined,
-          responseStatus: row.responseStatus ? (String(row.responseStatus).toLowerCase() as ScheduleItem['responseStatus']) : undefined,
+          title: String(title),
+          type: (String(col(row, 'type', 'eventtype', 'event_type', 'category') || 'task') as ScheduleItem['type']),
+          description: col(row, 'description', 'notes', 'agendanotes', 'agenda_notes', 'agenda', 'details', 'body', 'comment', 'comments') ? String(col(row, 'description', 'notes', 'agendanotes', 'agenda_notes', 'agenda', 'details', 'body', 'comment', 'comments')) : undefined,
+          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          responseStatus: col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status') ? (String(col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status')).toLowerCase() as ScheduleItem['responseStatus']) : undefined,
         });
         rowsParsed++;
       }
     });
   }
 
-  // Tasks sheet
-  const tasksSheet = wb.Sheets['Tasks'] || wb.Sheets['tasks'];
+  // ── Tasks sheet ─────────────────────────────────────────────────────
+  const tasksSheet = findSheet(wb, 'Tasks');
   if (tasksSheet) {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(tasksSheet, { raw: false });
-    rows.forEach((row, i) => {
-      const date = String(row.date || '') || todayStr();
+    rows.forEach((rawRow, i) => {
+      const row = lowerKeys(rawRow);
+      const date = String(col(row, 'date') || '') || todayStr();
       warnBadDate(date, 'Tasks', i, 'date', warnings);
       ensureDay(data, date);
-      if (row.title) {
-        if (row.dueDate) warnBadDate(String(row.dueDate), 'Tasks', i, 'dueDate', warnings);
-        const daysOpenRaw = row.daysOpen;
+      const title = col(row, 'title', 'taskname', 'task_name', 'task', 'name', 'subject', 'description');
+      if (title) {
+        const dueDate = col(row, 'duedate', 'due_date', 'due', 'deadline');
+        if (dueDate) warnBadDate(String(dueDate), 'Tasks', i, 'dueDate', warnings);
+        const daysOpenRaw = col(row, 'daysopen', 'days_open', 'dayspending', 'age');
         let daysOpen: number | null = null;
         if (daysOpenRaw !== undefined && daysOpenRaw !== '' && daysOpenRaw !== null) {
           const parsed = Number(daysOpenRaw);
@@ -169,104 +223,113 @@ function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: 
 
         data[date].tasks.push({
           id: genId('t', i),
-          title: String(row.title),
-          priority: normalizePriority(String(row.priority || 'medium')),
-          status: (String(row.status || 'open') as Task['status']),
-          dueDate: row.dueDate ? String(row.dueDate) : undefined,
-          source: row.source ? String(row.source) : undefined,
-          owner: row.owner ? String(row.owner) : undefined,
+          title: String(title),
+          priority: normalizePriority(String(col(row, 'priority', 'importance', 'urgency', 'level') || 'medium')),
+          status: (String(col(row, 'status', 'state', 'taskstatus', 'task_status') || 'open') as Task['status']),
+          dueDate: dueDate ? String(dueDate) : undefined,
+          source: col(row, 'source', 'origin', 'from', 'sourceinfo') ? String(col(row, 'source', 'origin', 'from', 'sourceinfo')) : undefined,
+          owner: col(row, 'owner', 'assignee', 'assignedto', 'assigned_to', 'responsible') ? String(col(row, 'owner', 'assignee', 'assignedto', 'assigned_to', 'responsible')) : undefined,
           daysOpen,
-          category: row.category ? String(row.category) : undefined,
-          taskType: normalizeTaskType(String(row.taskType || 'action')),
-          link: row.link ? String(row.link) : undefined,
+          category: col(row, 'category', 'group', 'tag', 'label', 'department') ? String(col(row, 'category', 'group', 'tag', 'label', 'department')) : undefined,
+          taskType: normalizeTaskType(String(col(row, 'tasktype', 'task_type', 'type', 'kind') || 'action')),
+          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
         });
         rowsParsed++;
       }
     });
   }
 
-  // Meetings sheet
-  const meetingsSheet = wb.Sheets['Meetings'] || wb.Sheets['meetings'];
+  // ── Meetings sheet ──────────────────────────────────────────────────
+  const meetingsSheet = findSheet(wb, 'Meetings', 'Meeting');
   if (meetingsSheet) {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(meetingsSheet, { raw: false });
-    rows.forEach((row, i) => {
-      const date = String(row.date || '') || todayStr();
+    rows.forEach((rawRow, i) => {
+      const row = lowerKeys(rawRow);
+      const date = String(col(row, 'date') || '') || todayStr();
       warnBadDate(date, 'Meetings', i, 'date', warnings);
       ensureDay(data, date);
-      const time = normalizeTime(row.time);
+      const time = normalizeTime(col(row, 'time', 'starttime', 'start_time', 'start'));
+      const title = col(row, 'title', 'subject', 'meetingtitle', 'meeting_title', 'meetingname', 'name', 'event', 'eventtitle');
       // Skip empty placeholder rows (date-only, no title)
-      if (row.title && time) {
-        const endTime = normalizeTime(row.endTime) || time;
+      if (title && time) {
+        const endTime = normalizeTime(col(row, 'endtime', 'end_time', 'end')) || time;
         data[date].meetings.push({
           id: genId('m', i),
-          title: String(row.title),
+          title: String(title),
           time,
           endTime,
-          organizer: row.organizer ? String(row.organizer) : undefined,
-          attendees: row.attendees ? String(row.attendees) : '',
-          location: row.location ? String(row.location) : undefined,
-          type: (String(row.type || 'teams') as Meeting['type']),
-          link: row.link ? String(row.link) : undefined,
-          responseStatus: row.responseStatus ? (String(row.responseStatus).toLowerCase() as Meeting['responseStatus']) : undefined,
+          organizer: col(row, 'organizer', 'organiser', 'host', 'createdby', 'created_by', 'scheduledby') ? String(col(row, 'organizer', 'organiser', 'host', 'createdby', 'created_by', 'scheduledby')) : undefined,
+          attendees: col(row, 'attendees', 'participants', 'invitees', 'members', 'people') ? String(col(row, 'attendees', 'participants', 'invitees', 'members', 'people')) : '',
+          location: col(row, 'location', 'room', 'venue', 'place', 'meetingroom', 'meeting_room') ? String(col(row, 'location', 'room', 'venue', 'place', 'meetingroom', 'meeting_room')) : undefined,
+          type: (String(col(row, 'type', 'meetingtype', 'meeting_type', 'format', 'mode') || 'teams') as Meeting['type']),
+          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          responseStatus: col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status') ? (String(col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status')).toLowerCase() as Meeting['responseStatus']) : undefined,
         });
         rowsParsed++;
       }
     });
   }
 
-  // Emails Inbox sheet
-  const inboxSheet = wb.Sheets['Emails Inbox'] || wb.Sheets['emails inbox'] || wb.Sheets['Inbox'];
+  // ── Emails Inbox sheet ──────────────────────────────────────────────
+  const inboxSheet = findSheet(wb, 'Emails Inbox', 'Inbox', 'Email Inbox', 'EmailsInbox', 'Emails_Inbox');
   if (inboxSheet) {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(inboxSheet, { raw: false });
-    rows.forEach((row, i) => {
-      const date = String(row.date || '') || todayStr();
+    rows.forEach((rawRow, i) => {
+      const row = lowerKeys(rawRow);
+      const date = String(col(row, 'date') || '') || todayStr();
       warnBadDate(date, 'Emails Inbox', i, 'date', warnings);
       ensureDay(data, date);
-      if (row.from && row.subject) {
-        const time = normalizeTime(row.time) || '09:00';
+      const from = col(row, 'from', 'sender', 'sentby', 'sent_by', 'author', 'sendername', 'sender_name');
+      const subject = col(row, 'subject', 'title', 'emailsubject', 'email_subject', 'subjectline', 'subject_line');
+      if (from && subject) {
+        const time = normalizeTime(col(row, 'time', 'receivedtime', 'received_time', 'received', 'timestamp')) || '09:00';
         data[date].emailsInbox.push({
           id: genId('ei', i),
           time,
-          from: String(row.from),
-          subject: String(row.subject),
-          folder: row.folder ? String(row.folder) : undefined,
-          priority: (String(row.priority || 'normal') as InboxEmail['priority']),
-          readStatus: (String(row.readStatus || 'read') as InboxEmail['readStatus']),
-          addressed: (String(row.addressed || 'direct') as InboxEmail['addressed']),
-          summary: row.summary ? String(row.summary) : '',
-          myReply: (String(row.myReply || 'no') as InboxEmail['myReply']),
-          replySummary: row.replySummary ? String(row.replySummary) : undefined,
-          attachment: (String(row.attachment || 'no') as InboxEmail['attachment']),
-          link: row.link ? String(row.link) : undefined,
+          from: String(from),
+          subject: String(subject),
+          folder: col(row, 'folder', 'foldername', 'folder_name', 'mailbox', 'category') ? String(col(row, 'folder', 'foldername', 'folder_name', 'mailbox', 'category')) : undefined,
+          priority: (String(col(row, 'priority', 'importance', 'urgency', 'level') || 'normal') as InboxEmail['priority']),
+          readStatus: (String(col(row, 'readstatus', 'read_status', 'read', 'unread', 'status', 'isread') || 'read') as InboxEmail['readStatus']),
+          addressed: (String(col(row, 'addressed', 'addressedto', 'addressed_to', 'toorcc', 'recipienttype') || 'direct') as InboxEmail['addressed']),
+          summary: col(row, 'summary', 'description', 'body', 'preview', 'snippet', 'notes', 'emailsummary') ? String(col(row, 'summary', 'description', 'body', 'preview', 'snippet', 'notes', 'emailsummary')) : '',
+          myReply: (String(col(row, 'myreply', 'my_reply', 'replied', 'hasreply', 'has_reply', 'reply') || 'no') as InboxEmail['myReply']),
+          replySummary: col(row, 'replysummary', 'reply_summary', 'replytext', 'reply_text', 'replydetail') ? String(col(row, 'replysummary', 'reply_summary', 'replytext', 'reply_text', 'replydetail')) : undefined,
+          attachment: (String(col(row, 'attachment', 'attachments', 'hasattachment', 'has_attachment', 'hasattachments') || 'no') as InboxEmail['attachment']),
+          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
         });
         rowsParsed++;
       }
     });
   }
 
-  // Emails Sent sheet
-  const sentSheet = wb.Sheets['Emails Sent'] || wb.Sheets['emails sent'] || wb.Sheets['Sent'];
+  // ── Emails Sent sheet ───────────────────────────────────────────────
+  const sentSheet = findSheet(wb, 'Emails Sent', 'Sent', 'Email Sent', 'EmailsSent', 'Emails_Sent', 'Sent Items');
   if (sentSheet) {
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sentSheet, { raw: false });
-    rows.forEach((row, i) => {
-      const date = String(row.date || '') || todayStr();
+    rows.forEach((rawRow, i) => {
+      const row = lowerKeys(rawRow);
+      const date = String(col(row, 'date') || '') || todayStr();
       warnBadDate(date, 'Emails Sent', i, 'date', warnings);
       ensureDay(data, date);
-      if (row.to && row.subject) {
-        if (row.deadline) warnBadDate(String(row.deadline), 'Emails Sent', i, 'deadline', warnings);
-        const time = normalizeTime(row.time) || '09:00';
+      const to = col(row, 'to', 'recipient', 'sentto', 'sent_to', 'recipients', 'toname');
+      const subject = col(row, 'subject', 'title', 'emailsubject', 'email_subject', 'subjectline', 'subject_line');
+      if (to && subject) {
+        const deadlineVal = col(row, 'deadline', 'duedate', 'due_date', 'due', 'commitmentdeadline');
+        if (deadlineVal) warnBadDate(String(deadlineVal), 'Emails Sent', i, 'deadline', warnings);
+        const time = normalizeTime(col(row, 'time', 'senttime', 'sent_time', 'sent', 'timestamp')) || '09:00';
         data[date].emailsSent.push({
           id: genId('es', i),
           time,
-          to: String(row.to),
-          subject: String(row.subject),
-          summary: row.summary ? String(row.summary) : '',
-          importance: (String(row.importance || 'normal') as SentEmail['importance']),
-          commitment: (String(row.commitment || 'no') as SentEmail['commitment']),
-          owner: row.owner ? String(row.owner) : undefined,
-          deadline: row.deadline ? String(row.deadline) : undefined,
-          attachment: (String(row.attachment || 'no') as SentEmail['attachment']),
-          link: row.link ? String(row.link) : undefined,
+          to: String(to),
+          subject: String(subject),
+          summary: col(row, 'summary', 'description', 'body', 'preview', 'snippet', 'notes', 'emailsummary') ? String(col(row, 'summary', 'description', 'body', 'preview', 'snippet', 'notes', 'emailsummary')) : '',
+          importance: (String(col(row, 'importance', 'priority', 'urgency', 'level') || 'normal') as SentEmail['importance']),
+          commitment: (String(col(row, 'commitment', 'iscommitment', 'is_commitment', 'committed', 'hascommitment') || 'no') as SentEmail['commitment']),
+          owner: col(row, 'owner', 'assignee', 'assignedto', 'assigned_to', 'responsible', 'commitmentowner') ? String(col(row, 'owner', 'assignee', 'assignedto', 'assigned_to', 'responsible', 'commitmentowner')) : undefined,
+          deadline: deadlineVal ? String(deadlineVal) : undefined,
+          attachment: (String(col(row, 'attachment', 'attachments', 'hasattachment', 'has_attachment', 'hasattachments') || 'no') as SentEmail['attachment']),
+          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
         });
         rowsParsed++;
       }

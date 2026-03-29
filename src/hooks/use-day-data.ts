@@ -33,9 +33,17 @@ function persistTasks(allData: Record<string, DayData>, city: string): Record<st
     const nextTitles = new Set(nextDay.tasks.map(t => t.title.toLowerCase()));
 
     for (const task of currentDay.tasks) {
-      if (task.status === 'open' || task.status === 'overdue') {
-        if (!nextTitles.has(task.title.toLowerCase())) {
-          // Carry forward: increment daysOpen, mark as overdue if it had a dueDate in the past
+      if (!nextTitles.has(task.title.toLowerCase())) {
+        if (task.status === 'done') {
+          // Carry forward done tasks too (so they appear faded at the bottom, not vanish)
+          const carried: Task = {
+            ...task,
+            id: `${task.id}-cf-${dateKeys[i + 1]}`,
+          };
+          nextDay.tasks.push(carried);
+          nextTitles.add(task.title.toLowerCase());
+        } else {
+          // Open/overdue: carry forward with incremented daysOpen
           const carried: Task = {
             ...task,
             id: `${task.id}-cf-${dateKeys[i + 1]}`,
@@ -54,10 +62,12 @@ function persistTasks(allData: Record<string, DayData>, city: string): Record<st
 
 export function useDayData(highPriorityEmails: string = '', city: string = '') {
   const [activeDay, setActiveDay] = useState<DayView>('today');
-  const [allData, setAllData] = useState<Record<string, DayData>>(() => getDemoData());
-  const [isUsingDemo, setIsUsingDemo] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  // Start empty — NOT demo. Real data or demo will be set after load attempt.
+  const [allData, setAllData] = useState<Record<string, DayData>>({});
+  const [isUsingDemo, setIsUsingDemo] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // start as loading
   const [lastLoaded, setLastLoaded] = useState<Date | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Apply task persistence
   const persistedData = useMemo(() => persistTasks(allData, city), [allData, city]);
@@ -66,26 +76,77 @@ export function useDayData(highPriorityEmails: string = '', city: string = '') {
 
   const loadFromFolder = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch('/api/load-data');
       const json = await res.json();
-      if (json.data && !json.empty) {
-        setAllData(json.data);
-        setIsUsingDemo(false);
-        setLastLoaded(new Date());
-        return true;
+
+      if (json.empty) {
+        // File doesn't exist in data/ folder → fall back to demo
+        setAllData(getDemoData());
+        setIsUsingDemo(true);
+        setLastLoaded(null);
+        return false;
       }
-    } catch {
-      // silently fall back to demo
+
+      if (!res.ok || json.error) {
+        // File exists but parsing failed — show error, NOT demo
+        const errMsg = json.error || `Server returned ${res.status}`;
+        console.error('[Day Data] Parse error:', errMsg);
+        setLoadError(errMsg);
+        // Keep whatever data we already have (empty or previous load)
+        return false;
+      }
+
+      if (json.data) {
+        // Check if we actually got any meaningful data
+        const dayKeys = Object.keys(json.data);
+        const totalItems = dayKeys.reduce((sum, k) => {
+          const d = json.data[k];
+          return sum + (d.schedule?.length || 0) + (d.tasks?.length || 0) +
+            (d.meetings?.length || 0) + (d.emailsInbox?.length || 0) + (d.emailsSent?.length || 0);
+        }, 0);
+
+        if (totalItems > 0) {
+          setAllData(json.data);
+          setIsUsingDemo(false);
+          setLastLoaded(new Date());
+          if (json.warnings?.length > 0) {
+            console.warn('[Day Data] Warnings:', json.warnings);
+          }
+          return true;
+        } else {
+          // File parsed but 0 items — still use it (could be a genuine empty day)
+          setAllData(json.data);
+          setIsUsingDemo(false);
+          setLastLoaded(new Date());
+          return true;
+        }
+      }
+
+      // Unexpected response shape — fall back to demo
+      setAllData(getDemoData());
+      setIsUsingDemo(true);
+      return false;
+    } catch (err) {
+      // Network error or fetch failure
+      const errMsg = err instanceof Error ? err.message : 'Failed to load data';
+      console.error('[Day Data] Load failed:', errMsg);
+      setLoadError(errMsg);
+      return false;
     } finally {
       setIsLoading(false);
     }
-    return false;
   }, []);
 
   // Auto-load from data/ folder on mount (skip on Vercel demo — keep demo data)
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_DEMO_MODE !== '1') {
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === '1') {
+      // Vercel demo mode: show demo data immediately
+      setAllData(getDemoData());
+      setIsUsingDemo(true);
+      setIsLoading(false);
+    } else {
       loadFromFolder();
     }
   }, [loadFromFolder]);
@@ -93,16 +154,21 @@ export function useDayData(highPriorityEmails: string = '', city: string = '') {
   const importData = useCallback((data: Record<string, DayData>) => {
     setAllData(data);
     setIsUsingDemo(false);
+    setLoadError(null);
   }, []);
 
   const resetToDemo = useCallback(() => {
     setAllData(getDemoData());
     setIsUsingDemo(true);
+    setLoadError(null);
   }, []);
 
   const toggleTask = useCallback((taskId: string) => {
     setAllData(prev => {
       const next = { ...prev };
+
+      // First, try to find the task directly in allData (original tasks)
+      let found = false;
       for (const dateKey of Object.keys(next)) {
         const day = next[dateKey];
         const taskIndex = day.tasks.findIndex((t: Task) => t.id === taskId);
@@ -118,20 +184,53 @@ export function useDayData(highPriorityEmails: string = '', city: string = '') {
             }),
           };
 
-          // Write back to Excel (fire-and-forget — don't block the UI)
+          // Write back to Excel (fire-and-forget)
           if (!isUsingDemo) {
             fetch('/api/update-task', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ date: dateKey, title: task.title, newStatus }),
-            }).catch(() => {
-              // Silent failure — UI state is already updated
-            });
+            }).catch(() => {});
           }
 
+          found = true;
           break;
         }
       }
+
+      // If not found, this is a carried-forward task (exists only in persistedData).
+      // The ID format is "{originalId}-cf-{date}". Find the original task by stripping the "-cf-..." suffix.
+      if (!found && taskId.includes('-cf-')) {
+        const originalId = taskId.replace(/-cf-\d{4}-\d{2}-\d{2}$/, '');
+        for (const dateKey of Object.keys(next)) {
+          const day = next[dateKey];
+          const taskIndex = day.tasks.findIndex((t: Task) => t.id === originalId);
+          if (taskIndex !== -1) {
+            const task = day.tasks[taskIndex];
+            const newStatus = task.status === 'done' ? 'open' : 'done';
+
+            next[dateKey] = {
+              ...day,
+              tasks: day.tasks.map((t: Task) => {
+                if (t.id !== originalId) return t;
+                return { ...t, status: newStatus as Task['status'] };
+              }),
+            };
+
+            // Write back to Excel
+            if (!isUsingDemo) {
+              fetch('/api/update-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: dateKey, title: task.title, newStatus }),
+              }).catch(() => {});
+            }
+
+            break;
+          }
+        }
+      }
+
       return next;
     });
   }, [isUsingDemo]);
@@ -165,6 +264,7 @@ export function useDayData(highPriorityEmails: string = '', city: string = '') {
     resetToDemo,
     isUsingDemo,
     isLoading,
+    loadError,
     toggleTask,
     refreshFromFolder: loadFromFolder,
     stats,

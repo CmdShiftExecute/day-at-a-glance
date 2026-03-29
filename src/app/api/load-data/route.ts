@@ -3,6 +3,9 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { parseExcelFile } from '@/lib/parse-excel';
 
+// Force dynamic — NEVER cache this route. The Excel file can change at any time.
+export const dynamic = 'force-dynamic';
+
 const DATA_PATH = join(process.cwd(), 'data', 'my-day-data.xlsx');
 
 export async function GET() {

@@ -3,7 +3,29 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as XLSX from 'xlsx';
 
+export const dynamic = 'force-dynamic';
+
 const DATA_PATH = join(process.cwd(), 'data', 'my-day-data.xlsx');
+
+/**
+ * Resolve the task title from a row, trying multiple column name variants
+ * (same alias logic as the parser in parse-excel.ts).
+ */
+function getRowTitle(row: Record<string, unknown>): string {
+  const keys = Object.keys(row);
+  // Build a lowercase key map
+  const lcMap: Record<string, string> = {};
+  for (const k of keys) lcMap[k.toLowerCase().trim()] = k;
+
+  // Try aliases in priority order
+  for (const alias of ['title', 'taskname', 'task_name', 'task', 'name', 'subject']) {
+    const actualKey = lcMap[alias];
+    if (actualKey && row[actualKey] !== undefined && row[actualKey] !== null && row[actualKey] !== '') {
+      return String(row[actualKey]);
+    }
+  }
+  return '';
+}
 
 export async function POST(request: Request) {
   try {
@@ -27,7 +49,7 @@ export async function POST(request: Request) {
     const buffer = readFileSync(DATA_PATH);
     const workbook = XLSX.read(buffer, { type: 'buffer' });
 
-    // Find the Tasks sheet
+    // Find the Tasks sheet (case-insensitive)
     const tasksSheetName = workbook.SheetNames.find(
       n => n.toLowerCase() === 'tasks'
     );
@@ -48,11 +70,16 @@ export async function POST(request: Request) {
 
     for (const row of rows) {
       const rowDate = String(row.date ?? '').trim();
-      const rowTitle = String(row.title ?? '').toLowerCase().trim();
+      const rowTitle = getRowTitle(row).toLowerCase().trim();
 
-      // Match by date + title substring (titles in Excel may be truncated or slightly different)
+      // Skip rows with no title
+      if (!rowTitle) continue;
+
+      // Match by date + title (exact or substring)
       if (rowDate === date && (rowTitle === titleLower || titleLower.includes(rowTitle) || rowTitle.includes(titleLower))) {
-        (row as Record<string, unknown>).status = newStatus;
+        // Find the actual status column key (case-insensitive)
+        const statusKey = Object.keys(row).find(k => k.toLowerCase().trim() === 'status') || 'status';
+        (row as Record<string, unknown>)[statusKey] = newStatus;
         matched = true;
         break;
       }
@@ -61,9 +88,11 @@ export async function POST(request: Request) {
     if (!matched) {
       // Try matching by title alone (for carried-forward tasks that may have a different date)
       for (const row of rows) {
-        const rowTitle = String(row.title ?? '').toLowerCase().trim();
+        const rowTitle = getRowTitle(row).toLowerCase().trim();
+        if (!rowTitle) continue;
         if (rowTitle === titleLower || titleLower.includes(rowTitle) || rowTitle.includes(titleLower)) {
-          (row as Record<string, unknown>).status = newStatus;
+          const statusKey = Object.keys(row).find(k => k.toLowerCase().trim() === 'status') || 'status';
+          (row as Record<string, unknown>)[statusKey] = newStatus;
           matched = true;
           break;
         }

@@ -53,6 +53,7 @@ export default function DashboardPage() {
     resetToDemo,
     isUsingDemo,
     isLoading,
+    loadError,
     toggleTask,
     refreshFromFolder,
     stats,
@@ -244,7 +245,7 @@ export default function DashboardPage() {
                 <StatsBar {...stats} />
               </div>
               <div className="flex items-center gap-1 pr-3 md:pr-6">
-                <DataFreshness lastLoaded={lastLoaded} isUsingDemo={isUsingDemo} />
+                <DataFreshness lastLoaded={lastLoaded} isUsingDemo={isUsingDemo} loadError={loadError} />
                 <KeyboardHelp />
               </div>
             </div>

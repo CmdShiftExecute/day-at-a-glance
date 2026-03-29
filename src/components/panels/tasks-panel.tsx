@@ -126,13 +126,13 @@ export function TasksPanel({ tasks, onToggle, completed, total, onAddClick, city
                       key={task.id}
                       layout
                       initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      animate={{ opacity: isDone ? 0.45 : 1, x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                       transition={{ delay: i * 0.02 }}
                       className="group rounded-xl p-2.5 cursor-pointer transition-colors"
                       style={{
-                        backgroundColor: isOverdue ? 'rgba(244,114,182,0.06)' : 'transparent',
-                        borderLeft: isOverdue ? '3px solid var(--accent-pink)' : '3px solid transparent',
+                        backgroundColor: isOverdue ? 'rgba(244,114,182,0.06)' : isDone ? 'rgba(52,211,153,0.04)' : 'transparent',
+                        borderLeft: isOverdue ? '3px solid var(--accent-pink)' : isDone ? '3px solid var(--accent-green)' : '3px solid transparent',
                       }}
                       onClick={() => setExpandedId(isExpanded ? null : task.id)}
                       onMouseEnter={(e) => {
