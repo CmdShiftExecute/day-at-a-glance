@@ -14,9 +14,13 @@
 
 <br/>
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/CmdShiftExecute/day-at-a-glance)
+[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-Day_at_a_Glance-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://day-at-a-glance.vercel.app)
 
-**One click. Your own daily command center in under 2 minutes.**
+**See Day at a Glance in action with sample data**
+
+<br/>
+
+[![Deploy Your Own](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CmdShiftExecute/day-at-a-glance)
 
 <br/>
 
