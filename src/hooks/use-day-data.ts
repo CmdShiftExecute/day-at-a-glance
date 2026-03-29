@@ -83,9 +83,11 @@ export function useDayData(highPriorityEmails: string = '', city: string = '') {
     return false;
   }, []);
 
-  // Auto-load from data/ folder on mount
+  // Auto-load from data/ folder on mount (skip on Vercel demo — keep demo data)
   useEffect(() => {
-    loadFromFolder();
+    if (process.env.NEXT_PUBLIC_DEMO_MODE !== '1') {
+      loadFromFolder();
+    }
   }, [loadFromFolder]);
 
   const importData = useCallback((data: Record<string, DayData>) => {
