@@ -51,27 +51,27 @@ When a run fails or produces bad output, start here:
 **Causes and fixes:**
 
 <details>
-<summary><b>Extension not installed in Comet</b></summary>
+<summary><b>Extension not installed in Chrome</b></summary>
 <br/>
 
-The Chrome MCP extension must be installed in **Comet** — not in Chrome or Safari.
+The Chrome MCP extension must be installed in the **Claude Cowork Chrome browser** — not in your regular Chrome, Safari, or any other browser.
 
-1. Open Comet in Claude Cowork
+1. Open Chrome in Claude Cowork
 2. Navigate to the Chrome Web Store
 3. Install the Claude Chrome MCP extension
-4. Reload Comet
+4. Reload Chrome
 5. Start a fresh Cowork session and try again
 
 </details>
 
 <details>
-<summary><b>Comet browser is not running</b></summary>
+<summary><b>Chrome browser is not running</b></summary>
 <br/>
 
-The prompt requires Comet to be active before the scheduled task fires. 
+The prompt requires Chrome to be active before the scheduled task fires. 
 
-1. Open a manual Cowork session
-2. Confirm Comet opens
+1. Open a manual Cowork session in your browser
+2. Confirm Chrome opens
 3. Navigate to Outlook Web to confirm it's accessible
 4. Then trigger the scheduled run
 
@@ -83,7 +83,7 @@ The prompt requires Comet to be active before the scheduled task fires.
 
 The Chrome MCP extension occasionally loses its connection after long idle periods.
 
-1. Click the Claude Chrome MCP extension icon in Comet's toolbar
+1. Click the Claude Chrome MCP extension icon in Chrome's toolbar
 2. Look for a "Reconnect" or "Connect" button
 3. Reload the active Outlook page
 4. Retry the run
@@ -98,17 +98,17 @@ The Chrome MCP extension occasionally loses its connection after long idle perio
 
 **Symptom:** Run stops at Step 0.5 with "Outlook requires sign-in" or similar.
 
-**Why this happens:** Your Outlook Web session in Comet expired. Microsoft sessions typically last 1–8 hours depending on your org's security policy.
+**Why this happens:** Your Outlook Web session in Chrome expired. Microsoft sessions typically last 1–8 hours depending on your org's security policy.
 
 **Fix:**
 
-1. Open Comet manually
+1. Open Chrome in Claude Cowork
 2. Navigate to `https://outlook.cloud.microsoft`
 3. Complete sign-in and any MFA prompts
-4. Leave the Outlook Web page open in Comet
+4. Leave the Outlook Web page open in Chrome
 5. Re-run the task
 
-**Prevention:** If your sessions expire frequently, check if your organization allows "Stay signed in" and enable it in Comet. Some orgs enforce short session times via Conditional Access — in that case, you may need to run the task during working hours rather than overnight.
+**Prevention:** If your sessions expire frequently, check if your organization allows "Stay signed in" and enable it in Chrome. Some orgs enforce short session times via Conditional Access — in that case, you may need to run the task during working hours rather than overnight.
 
 ---
 
@@ -355,7 +355,7 @@ Then match on `normalize_key(task['title'], task['owner'])` instead of raw value
 
 **Causes:**
 - Calendar navigation in Step 1 failed — check run log for Outlook Calendar errors
-- Events exist but are in a different calendar view (Comet was on a different date when Step 1 ran)
+- Events exist but are in a different calendar view (Chrome was on a different date when Step 1 ran)
 - Response status filtering is too strict — check if you're filtering out tentative/declined events
 
 ---

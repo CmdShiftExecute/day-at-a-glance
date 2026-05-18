@@ -59,7 +59,7 @@ claude
 |---------|-------------|
 | **Scheduled Tasks** | Run a Claude agent on a cron schedule (e.g., every day at 6 AM) |
 | **Directory Mounts** | Give the agent controlled access to specific folders on your machine |
-| **Comet Browser** | A Chromium browser the agent can control for web automation |
+| **Chrome Browser** | A Chrome-based browser provided by Claude Cowork for web automation |
 | **Chrome MCP** | An extension that gives Claude structured access to web pages |
 | **Session Isolation** | Each run gets its own sandbox — no bleed between executions |
 
@@ -103,7 +103,7 @@ Day at a Glance reads from a file: `data/my-day-data.xlsx`. Normally, you would 
 
 With a scheduled task, **Claude populates it for you** by:
 
-1. Opening your Outlook Web in the Comet browser
+1. Opening your Outlook Web in Chrome
 2. Reading your calendar, inbox, sent items, and to-do lists
 3. Writing everything into the Excel format the dashboard expects
 4. Saving it directly to your `data/` folder
@@ -115,7 +115,7 @@ Your dashboard refreshes automatically. You open it in the morning and everythin
 │                                                              │
 │   6:00 AM — Scheduled task fires                            │
 │         ↓                                                    │
-│   Claude reads Outlook via Comet browser                    │
+│   Claude reads Outlook via Chrome                    │
 │         ↓                                                    │
 │   Claude writes  my-day-data.xlsx  to your data/ folder     │
 │         ↓                                                    │
@@ -147,13 +147,13 @@ Understanding these four components will make the rest of the guide easy to foll
 <td>Hosts the scheduled task and manages the session lifecycle</td>
 </tr>
 <tr>
-<td><b>Comet</b></td>
+<td><b>Chrome Browser</b></td>
 <td>A Chromium-based browser managed by Cowork</td>
 <td>The browser Claude uses to navigate Outlook Web — you keep it logged in</td>
 </tr>
 <tr>
 <td><b>Chrome MCP</b></td>
-<td>A browser extension for the Comet browser</td>
+<td>A browser extension for Chrome</td>
 <td>Gives Claude structured DOM access to web pages (faster and more reliable than screenshots)</td>
 </tr>
 <tr>
@@ -175,7 +175,7 @@ It helps to be clear about what the automation does *not* do:
 | "Claude stores my emails" | No. Claude reads them during the run to extract summaries and tasks, then the session ends. Nothing is stored externally. |
 | "Claude replies to emails" | No. Read-only. The automation never sends, marks, or modifies anything — except restoring unread status it temporarily disturbed by reading. |
 | "My data goes to Anthropic" | The agent runs locally via Claude Code. Your email data is never uploaded to Anthropic's servers. |
-| "Claude needs my Outlook password" | No. Claude uses your already-logged-in Comet browser session. No credentials are entered or stored. |
+| "Claude needs my Outlook password" | No. Claude uses your already-logged-in Chrome browser session. No credentials are entered or stored. |
 
 > 🔒 All data stays on your machine. The Excel file is written locally. Nothing leaves your network.
 

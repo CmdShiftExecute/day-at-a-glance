@@ -20,7 +20,7 @@ Setup has five phases. Each one builds on the previous. Plan for about 20–30 m
 |-------|------------------|------|
 | **A** | Get the right Claude plan | 2 min |
 | **B** | Install Claude Code | 5 min |
-| **C** | Set up Comet + Chrome MCP | 5 min |
+| **C** | Set up Chrome + Chrome MCP | 5 min |
 | **D** | Configure directory mounts | 3 min |
 | **E** | Create and test the scheduled task | 10 min |
 
@@ -67,39 +67,39 @@ This opens a browser window to authenticate with your Claude account. Complete t
 
 ---
 
-## Phase C — Set Up Comet and Chrome MCP
+## Phase C — Set Up Chrome + Chrome MCP
 
-**Comet** is a Chromium-based browser that ships with Claude Cowork. Claude uses it to navigate Outlook Web via the Chrome MCP extension.
+Claude Cowork provides a **Chrome-based browser** for web automation. Claude uses it to navigate Outlook Web via the Chrome MCP extension.
 
-### Step 1 — Open Comet
+### Step 1 — Open Chrome
 
-In Claude Cowork, find the **Comet browser** panel. Comet should launch automatically when you open a Cowork session. If it doesn't:
+Claude Cowork opens a Chrome-based browser automatically when you start a session. If it does not appear:
 
 1. Open Claude Cowork at [claude.ai/cowork](https://claude.ai/cowork)
 2. Start a new session
-3. Comet will open as a side panel or separate window
+3. Chrome will open as a side panel or separate window
 
-### Step 2 — Install the Chrome MCP Extension in Comet
+### Step 2 — Install the Chrome MCP Extension
 
 The Chrome MCP extension gives Claude structured access to web page content.
 
-1. In Comet, navigate to the Chrome Web Store
+1. In Chrome, navigate to the Chrome Web Store
 2. Search for **"Claude Chrome MCP"** or follow the installation link from your Cowork settings
 3. Click **Add to Browser** and confirm
 
-> ⚠️ Install this extension in **Comet specifically** — not in Chrome, Safari, or any other browser. Claude only has access to Comet.
+> ⚠️ Install this extension in the **Claude Cowork Chrome browser** — not in your regular Chrome, Safari, or any other browser. Claude only has access to this browser.
 
-### Step 3 — Log in to Outlook in Comet
+### Step 3 — Log in to Outlook in Chrome
 
-This is critical. Claude uses your existing Comet session — it never handles your password.
+This is critical. Claude uses your existing Chrome browser session — it never handles your password.
 
-1. In Comet, navigate to `https://outlook.cloud.microsoft`
+1. In Chrome, navigate to `https://outlook.cloud.microsoft`
 2. Sign in with your Microsoft account
 3. Complete any MFA prompts
 4. Confirm your inbox loads correctly
-5. **Stay logged in** — don't sign out of Comet between runs
+5. **Stay logged in** — don't sign out of Chrome between runs
 
-> 💡 Keep Outlook Web open in Comet at all times. If the session expires, the scheduled task will stop and report an authentication failure rather than proceeding without access.
+> 💡 Keep Outlook Web open in Chrome at all times. If the session expires, the scheduled task will stop and report an authentication failure rather than proceeding without access.
 
 ---
 
@@ -197,9 +197,9 @@ Copy the complete prompt from [Chapter 3: The Automation Prompt](./03-sample-pro
 <tr><td>✅</td><td>Claude.ai Pro or Max plan active</td></tr>
 <tr><td>✅</td><td>Claude Code installed (<code>claude --version</code> works)</td></tr>
 <tr><td>✅</td><td>Authenticated with <code>claude auth login</code></td></tr>
-<tr><td>✅</td><td>Comet browser open in Cowork</td></tr>
-<tr><td>✅</td><td>Chrome MCP extension installed in Comet</td></tr>
-<tr><td>✅</td><td>Outlook Web logged in (and staying logged in) in Comet</td></tr>
+<tr><td>✅</td><td>Chrome browser open in Cowork</td></tr>
+<tr><td>✅</td><td>Chrome MCP extension installed in Chrome</td></tr>
+<tr><td>✅</td><td>Outlook Web logged in (and staying logged in) in Chrome</td></tr>
 <tr><td>✅</td><td>Data folder mounted: <code>.../day-at-a-glance/data</code></td></tr>
 <tr><td>✅</td><td>Archive folder mounted: <code>.../Claude/Scheduled/daily-briefing</code></td></tr>
 <tr><td>✅</td><td>Prompt pasted and customized</td></tr>
@@ -216,8 +216,8 @@ Copy the complete prompt from [Chapter 3: The Automation Prompt](./03-sample-pro
 <summary><b>Chrome MCP extension not detected by Claude</b></summary>
 <br/>
 
-- Confirm the extension is installed in **Comet specifically**, not in another browser
-- Reload Comet after installing
+- Confirm the extension is installed in the **Claude Cowork Chrome browser**, not in your regular browser
+- Reload Chrome after installing
 - Start a fresh Cowork session and try again
 - See [Chapter 6: Troubleshooting](./06-troubleshooting.md#chrome-mcp-not-connecting) for more steps
 
@@ -228,7 +228,7 @@ Copy the complete prompt from [Chapter 3: The Automation Prompt](./03-sample-pro
 <br/>
 
 Claude stops and reports the failure rather than attempting to sign in. To fix:
-1. Open Comet manually
+1. Open Chrome manually
 2. Navigate to `https://outlook.cloud.microsoft`
 3. Sign in and complete MFA
 4. Leave the page open

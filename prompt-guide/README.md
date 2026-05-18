@@ -64,7 +64,7 @@ Your Outlook                Claude Cowork              Your Dashboard
 <td align="center"><b>2</b></td>
 <td>⚙️ <a href="./02-setup.md">Setting Up Cowork</a></td>
 <td>15–20 min</td>
-<td>Step-by-step: subscription, Claude Code installation, Comet browser, Chrome MCP, directory mounts</td>
+<td>Step-by-step: subscription, Claude Code installation, Chrome browser, Chrome MCP, directory mounts</td>
 </tr>
 <tr>
 <td align="center"><b>3</b></td>
@@ -137,8 +137,8 @@ Each scheduled run performs a full daily briefing cycle:
 | **Day at a Glance** | Running (Docker or local) — [Setup guide](../literature/01-getting-started.md) |
 | **Claude subscription** | Claude.ai Pro or Max plan |
 | **Claude Code** | Installed as CLI (`npm install -g @anthropic-ai/claude-code`) |
-| **Comet browser** | Chromium-based browser that ships with Claude Cowork |
-| **Chrome MCP extension** | Installed in Comet — enables browser automation |
+| **Chrome browser** | Chrome-based browser provided by Claude Cowork |
+| **Chrome MCP extension** | Installed in the Claude Cowork Chrome browser — enables browser automation |
 | **Outlook Web** | Your email accessible at `https://outlook.cloud.microsoft` |
 
 ---

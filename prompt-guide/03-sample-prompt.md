@@ -16,6 +16,8 @@
 
 This prompt is production-hardened — it has been tested in real daily runs and refined to address real failure modes (broken links, unread emails being marked read, file delivery failures, carry-forward data loss). Read [Chapter 4: Customization](./04-customization.md) to understand which sections you must edit before your first run.
 
+> 💡 **To copy:** Click the copy icon on the top-right of the code block below, or switch to [Raw view](./03-sample-prompt.md?plain=1) and select all. Paste directly into the Claude Cowork scheduled task instructions field.
+
 ### Placeholders to Replace
 
 Search for these strings and replace them with your actual values before saving:
@@ -33,9 +35,7 @@ Search for these strings and replace them with your actual values before saving:
 
 ## The Complete Prompt
 
----
-
-```
+````
 # Day at a Glance — Daily Automation Task
 
 ## Context
@@ -94,7 +94,7 @@ failure summary.
 
 ### 0.5 — Confirm Outlook Web is reachable
 
-Verify https://outlook.cloud.microsoft loads in Comet. If sign-in is required,
+Verify https://outlook.cloud.microsoft loads in Chrome. If sign-in is required,
 attempt SSO; if SSO fails, STOP and report.
 
 ### 0.6 — Load carry-forward data
@@ -161,7 +161,7 @@ A valid deep link matches:
 
 DO NOT write these as link values:
   - "Open", "Open source", "link", "URL", "N/A", "TBD", "see email"
-  - Any folder URL without /id/... 
+  - Any folder URL without /id/...
   - Any string not matching the regex above
 
 If you cannot capture a valid URL, leave the link cell EMPTY. The dashboard
@@ -197,11 +197,11 @@ When merging carry-forward with fresh data on matching title + owner:
 
 ### Rule 6 — File I/O Pattern (memorise; no variations)
 
-MOUNT:   Step 0.1 + 0.2
+MOUNT:    Step 0.1 + 0.2
 SNAPSHOT: Step 0.3 (live → archive, ONCE per run)
-READ:    openpyxl.load_workbook(LIVE), fallback ARCHIVE
-BUILD:   wb.save('/sessions/<session>/my-day-data.xlsx')
-DELIVER: cp /sessions/<session>/my-day-data.xlsx /sessions/<session>/mnt/data/my-day-data.xlsx
+READ:     openpyxl.load_workbook(LIVE), fallback ARCHIVE
+BUILD:    wb.save('/sessions/<session>/my-day-data.xlsx')
+DELIVER:  cp /sessions/<session>/my-day-data.xlsx /sessions/<session>/mnt/data/my-day-data.xlsx
 
 Never write to /mnt/outputs/ — that is not a user-visible path.
 Never write to archive at end of run — the snapshot was taken at Step 0.3.
@@ -229,15 +229,15 @@ On unrecoverable Chrome MCP failure:
 
 ### ⚠️ Priority Values Are NOT Interchangeable Across Sheets
 
-Tasks sheet:       priority = high / medium / low
+Tasks sheet:        priority = high / medium / low
 Emails Inbox sheet: priority = evp / vp / direct / cc / normal
 Emails Sent sheet:  uses "importance" = high / normal (not priority)
 
 ### Column Name Rules
 
-DO NOT use:    startTime, subject (in Tasks/Schedule/Meetings), taskName,
-               sender, agendaNotes, notes, type (in Tasks for taskType)
-DO use:        time, title, from, description, taskType
+DO NOT use:  startTime, subject (in Tasks/Schedule/Meetings), taskName,
+             sender, agendaNotes, notes, type (in Tasks for taskType)
+DO use:      time, title, from, description, taskType
 
 ### Sheet 1: Schedule
 Columns: date, time, endTime, title, type, description, link, responseStatus
@@ -262,11 +262,11 @@ Source format (always ISO date):
   Chat
 
 Priority assignment:
-  EVP/VP source            → high (always)
-  Deadline ≤ 3 days        → high
-  Deadline 4–7 days        → high or medium
-  Deadline 8–14 days       → medium
-  Deadline > 14 days       → medium or low
+  EVP/VP source        → high (always)
+  Deadline ≤ 3 days    → high
+  Deadline 4–7 days    → high or medium
+  Deadline 8–14 days   → medium
+  Deadline > 14 days   → medium or low
 
 Deduplication: match on title + owner. Update existing, never duplicate.
 
@@ -317,21 +317,21 @@ Always skip:
   IT Notifications / Teams Notifications / Calendar Invites (automated noise)
 
 Search folders (use for intelligence, not primary scan):
-  - Unread Mail     → open FIRST to get total unread count
-  - Sent Directly to Me → open LAST as safety net
+  - Unread Mail          → open FIRST to get total unread count
+  - Sent Directly to Me  → open LAST as safety net
   - Flagged for Follow-up → cross-reference with Tasks
 
 ---
 
 ## Carry-Forward Decision Matrix
 
-| Previous Status | Deadline vs Today   | Action                                        |
-|----------------|---------------------|-----------------------------------------------|
-| done           | Any                 | DROP. Never carry forward.                    |
-| open           | Future / no date    | Carry as open, daysOpen += 1                  |
-| open           | Today               | Carry as open, priority: high, daysOpen += 1  |
-| open           | Past                | Carry as overdue, priority: high, daysOpen += 1 |
-| overdue        | Any                 | Carry as overdue, priority: high, daysOpen += 1 |
+| Previous Status | Deadline vs Today    | Action                                          |
+|----------------|----------------------|-------------------------------------------------|
+| done           | Any                  | DROP. Never carry forward.                      |
+| open           | Future / no date     | Carry as open, daysOpen += 1                    |
+| open           | Today                | Carry as open, priority: high, daysOpen += 1    |
+| open           | Past                 | Carry as overdue, priority: high, daysOpen += 1 |
+| overdue        | Any                  | Carry as overdue, priority: high, daysOpen += 1 |
 
 ---
 
@@ -339,7 +339,7 @@ Search folders (use for intelligence, not primary scan):
 
 ### Step 1 — Calendar → Schedule + Meetings
 
-1. Navigate to Outlook Calendar in Comet
+1. Navigate to Outlook Calendar in Chrome
 2. Read yesterday's events → date = yesterday
 3. Read today's events → date = today
 4. Read tomorrow's events → date = tomorrow
@@ -561,50 +561,17 @@ Notable:
 
 ## Quick Reference — Known Gotchas
 
-| Situation | Correct behaviour |
-|-----------|------------------|
-| /tasks/ URL errors out | Use sidebar tick icon only |
-| To-Do side panel doesn't update address bar | Leave link empty for standalone tasks |
-| Mark-as-unread bumps thread count >1 | Expected; do not re-investigate |
-| Reading-pane URL is a folder URL | Double-click for full view; verify /id/ in URL |
-| /mnt/outputs/ exists | Never deliver there |
-| Microsoft Excel app | Never request access; openpyxl only |
-| present_files | Never call in scheduled runs |
-| Session folder name changes every run | Never hardcode; always use mounted paths |
-```
-
----
-
-## How to Use This Prompt
-
-<table>
-<tbody>
-<tr>
-<td width="5%" align="center">1️⃣</td>
-<td>Copy everything between the triple-backtick fences above</td>
-</tr>
-<tr>
-<td align="center">2️⃣</td>
-<td>Open <a href="https://claude.ai/cowork">claude.ai/cowork</a> → Scheduled Tasks → New Task</td>
-</tr>
-<tr>
-<td align="center">3️⃣</td>
-<td>Paste into the instructions field</td>
-</tr>
-<tr>
-<td align="center">4️⃣</td>
-<td>Replace all placeholders (see table at top of this chapter)</td>
-</tr>
-<tr>
-<td align="center">5️⃣</td>
-<td>Customize your folder names and VIP people — see <a href="./04-customization.md">Chapter 4</a></td>
-</tr>
-<tr>
-<td align="center">6️⃣</td>
-<td>Click <b>Run Now</b> to test before setting the daily schedule</td>
-</tr>
-</tbody>
-</table>
+| Situation                              | Correct behaviour                                      |
+|----------------------------------------|--------------------------------------------------------|
+| /tasks/ URL errors out                 | Use sidebar tick icon only                             |
+| To-Do side panel doesn't update URL    | Leave link empty for standalone tasks                  |
+| Mark-as-unread bumps thread count >1   | Expected; do not re-investigate                        |
+| Reading-pane URL is a folder URL       | Double-click for full view; verify /id/ in URL         |
+| /mnt/outputs/ exists                   | Never deliver there                                    |
+| Microsoft Excel app                    | Never request access; openpyxl only                    |
+| present_files                          | Never call in scheduled runs                           |
+| Session folder name changes every run  | Never hardcode; always use mounted paths               |
+````
 
 ---
 
