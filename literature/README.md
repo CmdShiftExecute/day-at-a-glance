@@ -236,4 +236,37 @@ Whether you're setting up for the first time or diving into the architecture, th
 
 ---
 
+## 🤖 Automation Guide
+
+Want to populate your dashboard automatically every morning using AI? The **Day at a Glance Automation Guide** is a separate, dedicated guide that walks you through using **Claude Cowork** to run a scheduled task that reads your Outlook calendar, inbox, and to-do lists and writes your `my-day-data.xlsx` for you.
+
+<table>
+<tbody>
+<tr>
+<td width="60px" align="center">🧠</td>
+<td><b><a href="../prompt-guide/01-what-is-cowork.md">What is Claude Cowork?</a></b> — AI agents and scheduled tasks explained</td>
+</tr>
+<tr>
+<td align="center">⚙️</td>
+<td><b><a href="../prompt-guide/02-setup.md">Setting Up Cowork</a></b> — Step-by-step installation and configuration</td>
+</tr>
+<tr>
+<td align="center">📋</td>
+<td><b><a href="../prompt-guide/03-sample-prompt.md">The Automation Prompt</a></b> — Copy-ready, production-hardened prompt</td>
+</tr>
+<tr>
+<td align="center">🎛️</td>
+<td><b><a href="../prompt-guide/04-customization.md">Customization</a></b> — Adapt the prompt for your setup</td>
+</tr>
+<tr>
+<td align="center">🔧</td>
+<td><b><a href="../prompt-guide/06-troubleshooting.md">Troubleshooting</a></b> — Fix common run failures</td>
+</tr>
+</tbody>
+</table>
+
+[**→ Open the Automation Guide**](../prompt-guide/README.md)
+
+---
+
 [**Begin Reading → Chapter 1: Getting Started**](./01-getting-started.md)

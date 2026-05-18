@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const QUOTES = [
@@ -23,7 +23,11 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onComplete }: SplashScreenProps) {
-  const quote = useMemo(() => QUOTES[Math.floor(Math.random() * QUOTES.length)], []);
+  const [quote, setQuote] = useState(QUOTES[0]);
+
+  useEffect(() => {
+    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+  }, []);
 
   return (
     <motion.div

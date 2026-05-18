@@ -233,6 +233,24 @@ Full documentation is available in the [`literature/`](./literature/) folder:
 
 ---
 
+## 🤖 Automation Guide
+
+Populate your dashboard automatically every morning — no manual data entry. A Claude AI scheduled task reads your Outlook calendar, inbox, and to-do lists and writes `my-day-data.xlsx` for you.
+
+Full guide in the [`prompt-guide/`](./prompt-guide/) folder:
+
+| Chapter | Topic |
+|---------|-------|
+| [01](./prompt-guide/01-what-is-cowork.md) | What is Claude Cowork? |
+| [02](./prompt-guide/02-setup.md) | Setting Up Cowork |
+| [03](./prompt-guide/03-sample-prompt.md) | The Automation Prompt |
+| [04](./prompt-guide/04-customization.md) | Customizing for Your Setup |
+| [05](./prompt-guide/05-excel-output.md) | Understanding the Output |
+| [06](./prompt-guide/06-troubleshooting.md) | Troubleshooting |
+| [07](./prompt-guide/07-reference.md) | Reference & Official Links |
+
+---
+
 ## Keyboard Shortcuts
 
 | Key | Action |
@@ -252,6 +270,7 @@ Full documentation is available in the [`literature/`](./literature/) folder:
 day-at-a-glance/
 ├── data/                  # Persistent storage (git-ignored)
 ├── literature/            # Documentation (12 chapters)
+├── prompt-guide/          # Automation guide — Claude Cowork scheduled task (7 chapters)
 ├── public/                # Static assets
 ├── src/
 │   ├── app/               # Pages, layout, API routes

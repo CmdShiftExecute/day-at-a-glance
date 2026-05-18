@@ -26,6 +26,19 @@ function genId(prefix: string, i: number): string {
   return `${prefix}-imp-${i}`;
 }
 
+/** Validate a URL string — only allow absolute URLs with a recognised protocol */
+function sanitizeUrl(raw: unknown): string | undefined {
+  if (!raw) return undefined;
+  const str = String(raw).trim();
+  try {
+    const url = new URL(str);
+    if (['http:', 'https:', 'mailto:'].includes(url.protocol)) return str;
+  } catch {
+    // not a valid absolute URL
+  }
+  return undefined;
+}
+
 /** Normalize scheduler taskType values to our 4-value enum */
 function normalizeTaskType(raw: string): 'action' | 'deadline' | 'followup' | 'personal' {
   const v = raw.toLowerCase().replace(/[-_\s]/g, '');
@@ -193,7 +206,7 @@ function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: 
           title: String(title),
           type: (String(col(row, 'type', 'eventtype', 'event_type', 'category') || 'task') as ScheduleItem['type']),
           description: col(row, 'description', 'notes', 'agendanotes', 'agenda_notes', 'agenda', 'details', 'body', 'comment', 'comments') ? String(col(row, 'description', 'notes', 'agendanotes', 'agenda_notes', 'agenda', 'details', 'body', 'comment', 'comments')) : undefined,
-          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          link: sanitizeUrl(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')),
           responseStatus: col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status') ? (String(col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status')).toLowerCase() as ScheduleItem['responseStatus']) : undefined,
         });
         rowsParsed++;
@@ -232,7 +245,7 @@ function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: 
           daysOpen,
           category: col(row, 'category', 'group', 'tag', 'label', 'department') ? String(col(row, 'category', 'group', 'tag', 'label', 'department')) : undefined,
           taskType: normalizeTaskType(String(col(row, 'tasktype', 'task_type', 'type', 'kind') || 'action')),
-          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          link: sanitizeUrl(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')),
         });
         rowsParsed++;
       }
@@ -262,7 +275,7 @@ function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: 
           attendees: col(row, 'attendees', 'participants', 'invitees', 'members', 'people') ? String(col(row, 'attendees', 'participants', 'invitees', 'members', 'people')) : '',
           location: col(row, 'location', 'room', 'venue', 'place', 'meetingroom', 'meeting_room') ? String(col(row, 'location', 'room', 'venue', 'place', 'meetingroom', 'meeting_room')) : undefined,
           type: (String(col(row, 'type', 'meetingtype', 'meeting_type', 'format', 'mode') || 'teams') as Meeting['type']),
-          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          link: sanitizeUrl(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')),
           responseStatus: col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status') ? (String(col(row, 'responsestatus', 'response_status', 'response', 'rsvp', 'status')).toLowerCase() as Meeting['responseStatus']) : undefined,
         });
         rowsParsed++;
@@ -296,7 +309,7 @@ function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: 
           myReply: (String(col(row, 'myreply', 'my_reply', 'replied', 'hasreply', 'has_reply', 'reply') || 'no') as InboxEmail['myReply']),
           replySummary: col(row, 'replysummary', 'reply_summary', 'replytext', 'reply_text', 'replydetail') ? String(col(row, 'replysummary', 'reply_summary', 'replytext', 'reply_text', 'replydetail')) : undefined,
           attachment: (String(col(row, 'attachment', 'attachments', 'hasattachment', 'has_attachment', 'hasattachments') || 'no') as InboxEmail['attachment']),
-          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          link: sanitizeUrl(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')),
         });
         rowsParsed++;
       }
@@ -329,7 +342,7 @@ function parseRows(wb: XLSX.WorkBook, data: Record<string, DayData>): { errors: 
           owner: col(row, 'owner', 'assignee', 'assignedto', 'assigned_to', 'responsible', 'commitmentowner') ? String(col(row, 'owner', 'assignee', 'assignedto', 'assigned_to', 'responsible', 'commitmentowner')) : undefined,
           deadline: deadlineVal ? String(deadlineVal) : undefined,
           attachment: (String(col(row, 'attachment', 'attachments', 'hasattachment', 'has_attachment', 'hasattachments') || 'no') as SentEmail['attachment']),
-          link: col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink') ? String(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')) : undefined,
+          link: sanitizeUrl(col(row, 'link', 'url', 'outlookurl', 'outlook_url', 'weblink')),
         });
         rowsParsed++;
       }

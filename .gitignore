@@ -31,6 +31,9 @@ yarn-error.log*
 # user data (Excel, settings, photos)
 /data/
 
+# private docs (Cowork task config, internal notes — never publish)
+/docs/
+
 # vercel
 .vercel
 

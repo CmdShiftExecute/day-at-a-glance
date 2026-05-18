@@ -228,13 +228,35 @@ Your `data/` folder is preserved across rebuilds, so settings and imported data 
 
 <br/>
 
-**🎉 You've reached the end of the documentation!**
+**🎉 You've completed the core documentation!**
 
 If you have questions, suggestions, or find issues, please open a GitHub issue.
 
 <br/>
 
 [← Back to Architecture](./11-architecture.md) · [**Return to Documentation Portal →**](./README.md)
+
+</div>
+
+---
+
+## ⚡ Next: Automate Your Dashboard with Claude
+
+Ready to go further? Instead of populating `my-day-data.xlsx` by hand, you can have an AI agent do it for you every morning — reading your Outlook calendar, inbox, and to-do lists automatically.
+
+The **Automation Guide** covers everything:
+
+| Chapter | What You'll Learn |
+|---------|-----------------|
+| [What is Claude Cowork?](../prompt-guide/01-what-is-cowork.md) | How AI scheduled tasks work |
+| [Setting Up Cowork](../prompt-guide/02-setup.md) | Install, configure, connect |
+| [The Automation Prompt](../prompt-guide/03-sample-prompt.md) | Copy-ready, production-hardened prompt |
+| [Customization](../prompt-guide/04-customization.md) | Adapt it to your org |
+| [Troubleshooting](../prompt-guide/06-troubleshooting.md) | Fix common failures |
+
+[**→ Go to the Automation Guide**](../prompt-guide/README.md)
+
+<div align="center">
 
 <br/>
 

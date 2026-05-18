@@ -199,9 +199,10 @@ export function useDayData(highPriorityEmails: string = '', city: string = '') {
       }
 
       // If not found, this is a carried-forward task (exists only in persistedData).
-      // The ID format is "{originalId}-cf-{date}". Find the original task by stripping the "-cf-..." suffix.
+      // The ID may have multiple -cf- suffixes chained (e.g. t-imp-0-cf-2026-04-02-cf-2026-04-03).
+      // Strip ALL of them to find the original task in allData.
       if (!found && taskId.includes('-cf-')) {
-        const originalId = taskId.replace(/-cf-\d{4}-\d{2}-\d{2}$/, '');
+        const originalId = taskId.replace(/(-cf-\d{4}-\d{2}-\d{2})+$/, '');
         for (const dateKey of Object.keys(next)) {
           const day = next[dateKey];
           const taskIndex = day.tasks.findIndex((t: Task) => t.id === originalId);
